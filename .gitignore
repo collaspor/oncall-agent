@@ -1,0 +1,50 @@
+# 敏感信息
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+
+# 日志文件
+*.log
+logs/
+mcp_cls*.log
+mcp_monitor*.log
+server*.log
+
+# Docker 数据卷
+volumes/
+infra/volumes/
+
+# 上传文件
+uploads/
+
+# 诊断输出（已在 docs/diagnosis 中保存，排除根目录散落的）
+diagnosis_*.txt
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# 临时文件
+*.tmp
+*.bak
+query_loki.py
+aiops_body.json

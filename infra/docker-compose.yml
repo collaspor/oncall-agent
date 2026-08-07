@@ -1,0 +1,72 @@
+services:
+  # ===== 数据库 =====
+  postgres:
+    image: postgres:16-alpine
+    container_name: aiops-postgres
+    environment:
+      POSTGRES_USER: orderuser
+      POSTGRES_PASSWORD: orderpass
+      POSTGRES_DB: orderdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - aiops-net
+
+  # ===== 订单微服务 =====
+  order-service:
+    build: ../order-service
+    container_name: aiops-order-service
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    environment:
+      DATABASE_URL: postgres://orderuser:orderpass@postgres:5432/orderdb
+    mem_limit: 512m
+    networks:
+      - aiops-net
+
+  # ===== 监控 =====
+  prometheus:
+    image: prom/prometheus:v2.51.0
+    container_name: aiops-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.retention.time=2h
+    networks:
+      - aiops-net
+
+  # ===== 日志聚合 =====
+  loki:
+    image: grafana/loki:2.9.0
+    container_name: aiops-loki
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./loki-config.yml:/etc/loki/local-config.yaml
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - aiops-net
+
+  promtail:
+    image: grafana/promtail:2.9.0
+    container_name: aiops-promtail
+    volumes:
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./promtail-config.yml:/etc/promtail/config.yml
+    command: -config.file=/etc/promtail/config.yml
+    depends_on:
+      - loki
+    networks:
+      - aiops-net
+
+networks:
+  aiops-net:
+    driver: bridge
